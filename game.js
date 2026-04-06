@@ -376,11 +376,16 @@ class Game {
 
 /** A HTML button that performs an action when clicked. */
 class ControlButton {
-    constructor(label, handler) {
+    /**
+     * Create a new button
+     * @param {string} label The text to display on the button.
+     * @param {function} listener The click event handler.
+     */
+    constructor(label, listener) {
         const button = document.createElement("input");
         button.setAttribute("type", "button");
         button.setAttribute("value", label)
-        button.addEventListener("click", handler);
+        button.addEventListener("click", listener);
         const parent = document.getElementById("controls")
         parent.appendChild(button);
         
