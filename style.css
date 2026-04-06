@@ -1,0 +1,32 @@
+#display table {
+    margin: 16px auto;
+}
+
+#display td {
+    background: #ccc;
+    border: 4px solid white;
+    width: 32px;
+    height: 32px;
+}
+
+#display .snake {
+    background: #666;
+    animation-iteration-count: 1;
+    animation-name: snake-animation;
+    animation-duration: 2s;
+    animation-timing-function: ease-out;
+}
+
+
+@keyframes snake-animation {
+  from {
+    background: #000;
+  }
+  to {
+    background: #666;
+  }
+}
+
+#display .apple {
+    background: #f00;
+}

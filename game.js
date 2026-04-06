@@ -1,3 +1,26 @@
+    const UP = 0;
+const LEFT = 1;
+const DOWN = 2;
+const RIGHT = 3;
+
+const EMPTY_CELL = 0;
+const SNAKE_CELL = 1;
+const APPLE_CELL = 2;
+
+const DIRECTION_TO_DIFF = [
+    [-1, 0],
+    [0, -1],
+    [1, 0],
+    [0, 1]
+];
+
+const DIRECTION_TO_OPPOSITE = [
+    DOWN,
+    RIGHT,
+    UP,
+    LEFT
+];
+
 class World {
     /**
      *
@@ -23,7 +46,83 @@ class World {
     }
 }
 
-class ConsoleDisplay {
+class Display {
+    /**
+     *
+     * @param {number} height
+     * @param {number} width
+     */
+    reset(height, width) {
+        throw new Error("reset() is not implemented");
+    }
+
+    /**
+     *
+     * @param {World} world
+     */
+    render(world) {
+        throw new Error("render() is not implemented");
+    }
+}
+
+class TableDisplay extends Display {
+    /**
+     *
+     * @param {number} height
+     * @param {number} width
+     */
+    reset(height, width) {
+        this.cells = [];
+        
+        const divElement = document.getElementById("display");
+        const tableElement = document.createElement("table");
+        for (let row = 0; row < height; ++row) {
+            const rowElement = document.createElement("tr");
+            const cellsRow = []
+            for (let col = 0; col < width; ++col) {
+                const cellElement = document.createElement("td");
+                cellElement.setAttribute("class", "");
+                cellsRow.push(cellElement)
+                rowElement.appendChild(cellElement);
+            }
+            this.cells.push(cellsRow)
+            tableElement.appendChild(rowElement);
+        }
+        divElement.appendChild(tableElement);
+    }
+
+    /**
+     *
+     * @param {World} world
+     */
+    render(world) {
+        for (let row = 0; row < world.height; ++row) {
+            for (let col = 0; col < world.width; ++col) {
+                const currentClass = this.cells[row][col].getAttribute("class")
+                let nextClass = "";
+                if (world.cells[row][col] === SNAKE_CELL) {
+                    nextClass = "snake";
+                } else if (world.cells[row][col] === APPLE_CELL){
+                    nextClass = "apple";
+                }
+                if (nextClass !== currentClass) {
+                    this.cells[row][col].setAttribute("class", nextClass)
+                }
+            }
+        }        
+    }
+}
+
+class ConsoleDisplay extends Display {
+    /**
+     *
+     * @param {number} height
+     * @param {number} width
+     */
+    reset(height, width) {
+        console.clear();
+    }
+
     /**
      *
      * @param {World} world
@@ -48,23 +147,6 @@ class ConsoleDisplay {
     }
 }
 
-
-const UP = 0;
-const LEFT = 1;
-const DOWN = 2;
-const RIGHT = 3;
-
-const EMPTY_CELL = 0;
-const SNAKE_CELL = 1;
-const APPLE_CELL = 2;
-
-const DIRECTION_TO_DIFF = [
-    [-1, 0],
-    [0, -1],
-    [1, 0],
-    [0, 1]
-];
-
 /**
  *
  * @param {number} max
@@ -77,29 +159,38 @@ function randomInt(max) {
 class Player {
     constructor() {
         this.direction = RIGHT;
+        this.previousDirection = this.direction;
         this.bindToKeyboardEvents();
     }
 
     getMove() {
+        this.previousDirection = this.direction;
         return this.direction;
     }
 
     bindToKeyboardEvents() {
         addEventListener("keydown", (event) => {
+            let nextDirection = null;
             if (event.code === "ArrowUp") {
-                this.direction = UP;
+                nextDirection = UP;
                 event.preventDefault();
             } else if (event.code === "ArrowLeft") {
-                this.direction = LEFT;
+                nextDirection = LEFT;
                 event.preventDefault();
             } else if (event.code === "ArrowDown") {
-                this.direction = DOWN;
+                nextDirection = DOWN;
                 event.preventDefault();
             } else if (event.code === "ArrowRight") {
-                this.direction = RIGHT;
+                nextDirection = RIGHT;
                 event.preventDefault();
             }
-
+            if (nextDirection !== null) {
+                event.preventDefault();
+                // Prevent snake from reversing direction, which causes instant death
+                if (nextDirection !== DIRECTION_TO_OPPOSITE[this.previousDirection]) {
+                    this.direction = nextDirection;
+                }
+            }
         });
     }
 }
@@ -112,7 +203,7 @@ class Game {
      */
     constructor(height, width) {
         this.world = new World(height, width);
-        this.display = new ConsoleDisplay();
+        this.display = new TableDisplay();
         this.reset();
         this.timer = null;
         this.player = new Player();
@@ -127,6 +218,7 @@ class Game {
         this.world.cells[snakeRow][snakeCol] = SNAKE_CELL;
         this.snakeCells = [[snakeRow, snakeCol]];
         this.placeApple();
+        this.display.reset(this.world.height, this.world.width);
         this.display.render(this.world);
     }
 
@@ -168,7 +260,6 @@ class Game {
             return;
         }
 
-
         const ateApple = this.world.cells[nextRow][nextCol] === APPLE_CELL;
 
         this.snakeCells.unshift([nextRow, nextCol]);
@@ -199,4 +290,9 @@ class Game {
     }
 }
 
-const game = new Game(16, 16);
+function main() {
+    const game = new Game(8, 8);
+    game.start();
+}
+
+main();
